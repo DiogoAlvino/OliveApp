@@ -1,0 +1,40 @@
+name: olive_app
+description: "A new Flutter project."
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.4.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  auto_size_text: ^3.0.0
+  image_picker: ^0.8.5+3
+  flutter_svg: ^1.0.0
+  lottie: ^1.4.3
+  http: ^1.2.1
+  path_provider: ^2.0.15
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - lib/assets/animation.json
+  fonts:
+    - family: Rawline
+      fonts:
+        - asset: lib/assets/rawline-400.ttf
+        - asset: lib/assets/rawline-400.ttf
+          weight: 700
+        - asset: lib/assets/rawline-400.ttf
+          style: italic
+
