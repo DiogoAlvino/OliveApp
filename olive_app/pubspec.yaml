@@ -18,6 +18,9 @@ dependencies:
   http: ^1.2.1
   path_provider: ^2.0.15
   cupertino_icons: ^1.0.6
+  shared_preferences: ^2.0.13
+  flutter_colorpicker: ^1.0.3
+  syncfusion_flutter_charts: ^21.1.35
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +32,14 @@ flutter:
   uses-material-design: true
   assets:
     - lib/assets/animation.json
+    - lib/assets/classes/classe1.png
+    - lib/assets/classes/classe2.png
+    - lib/assets/classes/classe3.png
+    - lib/assets/classes/classe4.png
+    - lib/assets/classes/classe5.png
+    - lib/assets/classes/classe6.png
+    - lib/assets/classes/classe7.png
+    - lib/assets/classes/classe8.png
   fonts:
     - family: Rawline
       fonts:

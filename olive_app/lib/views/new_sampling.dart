@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:olive_app/views/results.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NewSamplingScreen extends StatefulWidget {
   const NewSamplingScreen({super.key});
@@ -14,69 +15,97 @@ class NewSamplingScreen extends StatefulWidget {
 
 class _NewSamplingScreenState extends State<NewSamplingScreen> {
   final ImagePicker _picker = ImagePicker();
-  XFile? _selectedImage;
+  final TextEditingController _nomeLoteController = TextEditingController();
+  final TextEditingController _numAmostrasController = TextEditingController();
+  final TextEditingController _informacoesController = TextEditingController();
+  List<XFile> _selectedImages = [];
   Map<String, dynamic>? _classificationResult;
+  List<Map<String, dynamic>> colorPatterns = [];
+  String? selectedColorPatternName;
 
-  Future<void> _pickImage() async {
+  @override
+  void initState() {
+    super.initState();
+    _loadColorPatterns();
+  }
+
+  Future<void> _loadColorPatterns() async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String>? savedPatterns = prefs.getStringList('colorPatterns');
+
+    if (savedPatterns != null) {
+      setState(() {
+        colorPatterns = savedPatterns
+            .map((pattern) => Map<String, dynamic>.from(jsonDecode(pattern)))
+            .toList();
+      });
+    }
+  }
+
+  Future<void> _pickImages() async {
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
+      final List<XFile>? images = await _picker.pickMultiImage();
+      if (images != null && images.isNotEmpty) {
         setState(() {
-          _selectedImage = image;
+          _selectedImages.addAll(images);
         });
       } else {
         print("Nenhuma imagem selecionada.");
       }
     } catch (e) {
-      print("Erro ao selecionar imagem: $e");
+      print("Erro ao selecionar imagens: $e");
     }
   }
 
-  Future<void> _classifyImage() async {
-  if (_selectedImage == null) return;
+  Future<void> _classifyImages() async {
+    if (_selectedImages.isEmpty) return;
 
-  try {
-    // Converter a imagem para Base64
-    String base64Image = await _convertToBase64(_selectedImage!);
+    if (selectedColorPatternName == null) {
+      _showAlertDialog('Erro', 'Por favor, selecione um padrão de cor antes de iniciar.');
+      return;
+    }
 
-    // Enviar a imagem para a API
-    var response = await http.post(
-      Uri.parse('http://192.168.1.12:5000/process'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'images': [base64Image]}),
-    );
+    try {
+      List<String> base64Images = await Future.wait(_selectedImages.map((image) async {
+        return await _convertToBase64(image);
+      }));
 
-    if (response.statusCode == 200) {
-      var result = jsonDecode(response.body);
-      setState(() {
-        _classificationResult = result['classification'];
-      });
-
-      // Verifique se as chaves necessárias estão presentes e não nulas
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ClassificationResultScreen(
-            result: {
-              'lote': 'Lote Teste 2',
-              'informacoes': 'Segundo lote de teste',
-              'padraoDeCor': 'Padrão 2',
-              'classes': result['classification']['classes'] ?? [],
-              'percentAmostras': result['classification']['percentAmostras'] ?? [],
-              'modeloPred': 'Modelo 2',
-              'totalAmostras': result['classification']['totalAmostras']?.toString() ?? 'N/A',
-              'indiceMaturacao': result['classification']['indiceMaturacao']?.toString() ?? 'N/A',
-            },
-          ),
-        ),
+      var response = await http.post(
+        Uri.parse('http://192.168.1.7:5000/process'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'images': base64Images}),
       );
-    } else {
-      print("Erro na API: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        var result = jsonDecode(response.body);
+        setState(() {
+          _classificationResult = result['classification'];
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ClassificationResultScreen(
+              result: {
+                'lote': _nomeLoteController.text,
+                'informacoes': _informacoesController.text,
+                'padraoDeCor': selectedColorPatternName ?? 'N/A',
+                'classes': result['classification']['classes'] ?? [],
+                'percentAmostras': result['classification']['percentAmostras'] ?? [],
+                'totalAmostras': result['classification']['totalAmostras']?.toString() ?? 'N/A',
+                'indiceMaturacao': result['classification']['indiceMaturacao']?.toString() ?? 'N/A',
+              },
+              showSaveAndNewSampling: true,
+            ),
+          ),
+        );
+      } else {
+        print("Erro na API: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Erro ao classificar as imagens: $e");
     }
-  } catch (e) {
-    print("Erro ao classificar a imagem: $e");
   }
-}
 
   Future<String> _convertToBase64(XFile image) async {
     File file = File(image.path);
@@ -84,10 +113,45 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
     return base64Encode(imageBytes);
   }
 
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+  }
+
+  void _showAlertDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _nomeLoteController.dispose();
+    _numAmostrasController.dispose();
+    _informacoesController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -135,6 +199,7 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                     children: [
                       // Campo Nome do lote
                       TextField(
+                        controller: _nomeLoteController,
                         decoration: InputDecoration(
                           labelText: 'Nome do lote',
                           border: OutlineInputBorder(
@@ -147,6 +212,7 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                       const SizedBox(height: 20),
                       // Campo Nº de amostras
                       TextField(
+                        controller: _numAmostrasController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           labelText: 'Nº de amostras',
@@ -158,8 +224,8 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Campo Padrão de cor
-                      TextField(
+                      // Campo Padrão de cor (Dropdown)
+                      DropdownButtonFormField<String>(
                         decoration: InputDecoration(
                           labelText: 'Padrão de cor',
                           border: OutlineInputBorder(
@@ -168,22 +234,26 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                           filled: true,
                           fillColor: Colors.white,
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Campo Modelo preditivo
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Modelo preditivo',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30.0),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
+                        value: selectedColorPatternName,
+                        items: colorPatterns.map((pattern) {
+                          return DropdownMenuItem<String>(
+                            value: pattern['name'],
+                            child: Text(pattern['name']),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedColorPatternName = value;
+                          });
+                        },
+                        hint: Text(colorPatterns.isEmpty ? 'Nenhum padrão de cor cadastrado' : 'Selecione um padrão de cor'),
+                        disabledHint: Text('Nenhum padrão de cor cadastrado'),
+                        isExpanded: true,
                       ),
                       const SizedBox(height: 20),
                       // Campo Informações
                       TextField(
+                        controller: _informacoesController,
                         decoration: InputDecoration(
                           labelText: 'Informações',
                           border: OutlineInputBorder(
@@ -195,31 +265,45 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                       ),
                       const SizedBox(height: 20),
                       // Botão para selecionar imagens
-                      ElevatedButton.icon(
-                        onPressed: _pickImage,
-                        icon: const Icon(Icons.photo_library, color: Colors.white),
-                        label: const Text(
-                          'Selecionar Imagens',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30.0),
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              onPressed: _pickImages,
+                              icon: const Icon(Icons.photo_library, color: Colors.white),
+                              tooltip: 'Selecionar Imagens',
+                            ),
                           ),
-                          elevation: 10,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Quantidade de imagens: ${_selectedImages.length}',
+                            style: TextStyle(
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
-                      // Mostrar a imagem selecionada
-                      if (_selectedImage != null)
-                        Image.file(
-                          File(_selectedImage!.path),
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
+                      // Mostrar a lista de arquivos selecionados
+                      if (_selectedImages.isNotEmpty)
+                        Container(
+                          height: 200, // Defina uma altura fixa para a lista
+                          child: ListView.builder(
+                            itemCount: _selectedImages.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: Text(_selectedImages[index].name),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.remove_circle, color: Colors.red),
+                                  onPressed: () => _removeImage(index),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                     ],
                   ),
@@ -231,7 +315,7 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                 width: double.infinity, // Para preencher a largura total
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _classifyImage, // Chamar a função de classificação ao iniciar
+                  onPressed: colorPatterns.isEmpty ? null : _classifyImages, // Chamar a função de classificação ao iniciar
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(

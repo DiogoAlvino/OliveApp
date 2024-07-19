@@ -1,6 +1,12 @@
+// lib/views/home.dart
+
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:olive_app/views/configurations.dart';
 import 'package:olive_app/views/new_sampling.dart';
+import 'package:olive_app/views/results_list.dart';
+import 'package:olive_app/widgets/custom_bottom_menu.dart';
+import 'package:olive_app/widgets/menu_item.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -55,73 +61,16 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20.0),
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(0, -2),
-                    blurRadius: 8.0,
-                  ),
-                ],
-              ),
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildMenuButton(
-                    context,
-                    icon: Icons.add,
-                    label: 'Nova Amostragem',
-                    route: const NewSamplingScreen(),
-                  ),
-                  _buildMenuButton(
-                    context,
-                    icon: Icons.bar_chart,
-                    label: 'Resultados',
-                    route: null,
-                  ),
-                  _buildMenuButton(
-                    context,
-                    icon: Icons.settings,
-                    label: 'Configurações',
-                    route: null,
-                  ),
-                ],
-              ),
+            CustomBottomMenu(
+              selectedIndex: 0,
+              items: [
+                MenuItem(icon: Icons.bar_chart, label: 'Resultados', route: const ResultListScreen()),
+                MenuItem(icon: Icons.add, label: 'Nova Amostragem', route: const NewSamplingScreen()),
+                MenuItem(icon: Icons.settings, label: 'Configurações', route: const ConfigurationsScreen()),
+              ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildMenuButton(BuildContext context,
-      {required IconData icon, required String label, Widget? route}) {
-    return InkWell(
-      onTap: route != null
-          ? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => route),
-              );
-            }
-          : null,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 30, color: Colors.green.shade500),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: TextStyle(color: Colors.green.shade500),
-          ),
-        ],
       ),
     );
   }
