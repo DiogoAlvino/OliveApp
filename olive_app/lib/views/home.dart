@@ -1,5 +1,3 @@
-// lib/views/home.dart
-
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:olive_app/views/configurations.dart';

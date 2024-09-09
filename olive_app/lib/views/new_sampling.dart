@@ -1,4 +1,4 @@
-import 'dart:convert'; // Para conversão Base64
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -70,8 +70,10 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
         return await _convertToBase64(image);
       }));
 
+      var ipAPI = '/process';
+
       var response = await http.post(
-        Uri.parse('http://192.168.1.7:5000/process'),
+        Uri.parse(ipAPI),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'images': base64Images}),
       );
@@ -197,7 +199,6 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Campo Nome do lote
                       TextField(
                         controller: _nomeLoteController,
                         decoration: InputDecoration(
@@ -210,7 +211,6 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Campo Nº de amostras
                       TextField(
                         controller: _numAmostrasController,
                         keyboardType: TextInputType.number,
@@ -224,7 +224,6 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Campo Padrão de cor (Dropdown)
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
                           labelText: 'Padrão de cor',
@@ -251,7 +250,6 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                         isExpanded: true,
                       ),
                       const SizedBox(height: 20),
-                      // Campo Informações
                       TextField(
                         controller: _informacoesController,
                         decoration: InputDecoration(
@@ -264,7 +262,6 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      // Botão para selecionar imagens
                       Row(
                         children: [
                           Container(
@@ -288,10 +285,9 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      // Mostrar a lista de arquivos selecionados
                       if (_selectedImages.isNotEmpty)
                         Container(
-                          height: 200, // Defina uma altura fixa para a lista
+                          height: 200,
                           child: ListView.builder(
                             itemCount: _selectedImages.length,
                             itemBuilder: (context, index) {
@@ -310,12 +306,11 @@ class _NewSamplingScreenState extends State<NewSamplingScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              // Botão Iniciar
               SizedBox(
-                width: double.infinity, // Para preencher a largura total
+                width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: colorPatterns.isEmpty ? null : _classifyImages, // Chamar a função de classificação ao iniciar
+                  onPressed: colorPatterns.isEmpty ? null : _classifyImages,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(

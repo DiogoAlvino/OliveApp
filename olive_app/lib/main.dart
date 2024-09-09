@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:olive_app/views/new_sampling.dart';
 import 'package:olive_app/views/results_list.dart';
-import 'views/home.dart'; // Importa a tela principal
+import 'views/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

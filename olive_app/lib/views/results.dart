@@ -51,18 +51,15 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Obter classes e percentagens, ou usar listas vazias como padrão
     List<dynamic> classes = widget.result['classes'] ?? [];
     List<dynamic> percentAmostras = widget.result['percentAmostras'] ?? [];
     int totalAmostras = int.tryParse(widget.result['totalAmostras'].toString()) ?? 0;
 
-    // Calcular quantidade de azeitonas para cada classe com base no percentual
     List<int> quantidadeAzeitonas = [];
     for (int i = 0; i < percentAmostras.length; i++) {
       quantidadeAzeitonas.add((percentAmostras[i] * totalAmostras / 100).round());
     }
 
-    // Dados para o gráfico de barras
     List<ChartData> chartData = [];
     for (int i = 0; i < classes.length; i++) {
       chartData.add(ChartData('C${i + 1}', percentAmostras[i].toDouble()));
@@ -115,27 +112,21 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
                   Expanded(
                     child: ListView(
                       children: [
-                        // Exibir o lote
                         _buildResultItem('Lote', widget.result['lote'] ?? 'N/A'),
                         const SizedBox(height: 10),
 
-                        // Exibir as informações adicionais
                         _buildResultItem('Informações', widget.result['informacoes'] ?? 'N/A'),
                         const SizedBox(height: 10),
 
-                        // Exibir o padrão de cor
                         _buildResultItem('Padrão de cor', widget.result['padraoDeCor'] ?? 'N/A'),
                         const SizedBox(height: 10),
 
-                        // Exibir o total de amostras processadas
                         _buildResultItem('Total de Amostras', widget.result['totalAmostras']?.toString() ?? 'N/A'),
                         const SizedBox(height: 10),
 
-                        // Exibir o índice de maturação
                         _buildResultItem('Índice de Maturação', widget.result['indiceMaturacao']?.toString() ?? 'N/A'),
                         const SizedBox(height: 20),
 
-                        // Exibir a classificação em classes de maturação
                         const Text(
                           'Classes de Maturação:',
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -150,7 +141,6 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
                         ),
                         const SizedBox(height: 5),
 
-                        // Adicionar gráfico de barras
                         Container(
                           height: 200,
                           padding: const EdgeInsets.all(8.0),
@@ -176,7 +166,6 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              // Navegar para a tela de Nova Amostragem
                               Navigator.pushNamed(context, '/new_sampling');
                             },
                             style: ElevatedButton.styleFrom(
@@ -195,7 +184,6 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              // Navegar para o Menu (Tela Principal)
                               Navigator.pushNamed(context, '/');
                             },
                             style: ElevatedButton.styleFrom(
@@ -215,7 +203,6 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
                         Expanded(
                           child: ElevatedButton(
                             onPressed: () {
-                              // Navegar para a Lista de Resultados
                               Navigator.pushNamed(context, '/result_list');
                             },
                             style: ElevatedButton.styleFrom(
@@ -252,7 +239,6 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
     );
   }
 
-  // Widget para exibir uma linha de resultado
   Widget _buildResultItem(String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +258,6 @@ class _ClassificationResultScreenState extends State<ClassificationResultScreen>
     );
   }
 
-  // Função para criar widgets de exibição das classes e porcentagens em forma de tabela
   Widget _buildClassesTable(List<dynamic> classes, List<dynamic> percentages, List<int> quantities) {
     return Table(
       border: TableBorder.all(),
